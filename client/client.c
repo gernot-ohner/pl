@@ -11,7 +11,6 @@ int main(int argc, char *argv[])
     int sockfd;
     char buf[MAXDATASIZE];
     struct addrinfo *servinfo, *p;
-    int rv;
     char s[INET6_ADDRSTRLEN];
 
     if (argc != 2) {
@@ -21,10 +20,7 @@ int main(int argc, char *argv[])
 
     struct addrinfo hints = get_hints(AF_UNSPEC, SOCK_STREAM, 0);
 
-    if ((rv = getaddrinfo(argv[1], PORT, &hints, &servinfo)) != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-        return 1;
-    }
+    if (Getaddrinfo(argv[1], PORT, &hints, &servinfo) != 0) return 1;
 
     // loop through all the results and connect to the first we can
     for(p = servinfo; p != NULL; p = p->ai_next) {

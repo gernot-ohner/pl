@@ -19,10 +19,7 @@ int main(int argc, char *argv[])
 
     struct addrinfo hints = get_hints(AF_INET6, SOCK_DGRAM, 0);
 
-    if ((rv = getaddrinfo(argv[1], SERVERPORT, &hints, &servinfo)) != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-        return 1;
-    }
+    if (Getaddrinfo(argv[1], SERVERPORT, &hints, &servinfo) != 0) return 1;
 
     // loop through all the results and make a socket
     for(p = servinfo; p != NULL; p = p->ai_next) {

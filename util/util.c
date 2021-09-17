@@ -2,7 +2,6 @@
 // Created by go on 16.09.21.
 //
 
-#include <netdb.h>
 #include "util.h"
 
 void* get_in_addr(struct sockaddr* sa) {
@@ -20,4 +19,10 @@ struct addrinfo get_hints(int family, int type, int flags) {
     hints.ai_socktype = type;
     hints.ai_flags = flags;
     return hints;
+}
+
+int Getaddrinfo(const char* name, const char* service, const struct addrinfo* hints, struct addrinfo** result) {
+    int rv = getaddrinfo(name, service, hints, result);
+    if (rv != 0) fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+    return rv;
 }

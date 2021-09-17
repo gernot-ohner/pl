@@ -28,10 +28,7 @@ int main(void)
 
     struct addrinfo hints = get_hints(AF_INET6, SOCK_DGRAM, AI_PASSIVE);
 
-    if ((rv = getaddrinfo(NULL, MYPORT, &hints, &servinfo)) != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-        return 1;
-    }
+    if (Getaddrinfo(NULL, MYPORT, &hints, &servinfo) != 0) return 1;
 
     // loop through all the results and bind to the first we can
     for(p = servinfo; p != NULL; p = p->ai_next) {

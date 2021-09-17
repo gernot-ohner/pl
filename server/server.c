@@ -14,14 +14,10 @@ int main(void)
     struct sigaction sa;
     int yes=1;
     char s[INET6_ADDRSTRLEN];
-    int rv;
 
     struct addrinfo hints = get_hints(AF_UNSPEC, SOCK_STREAM, AI_PASSIVE);
 
-    if ((rv = getaddrinfo(NULL, PORT, &hints, &servinfo)) != 0) {
-        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-        return 1;
-    }
+    if (Getaddrinfo(NULL, PORT, &hints, &servinfo) != 0) return 1;
 
     // loop through all the results and bind to the first we can
     for(p = servinfo; p != NULL; p = p->ai_next) {
@@ -76,9 +72,7 @@ int main(void)
             continue;
         }
 
-        inet_ntop(their_addr.ss_family,
-                  get_in_addr((struct sockaddr *)&their_addr),
-                  s, sizeof s);
+        inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
         printf("server: got connection from %s\n", s);
 
         if (!fork()) { // this is the child process
