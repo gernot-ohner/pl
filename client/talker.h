@@ -18,7 +18,6 @@
 
 #define SERVERPORT "4950"	// the port users will be connecting to
 
-struct addrinfo get_hints();
 int Sendto(char* const* argv, int sockfd, const struct addrinfo* p);
 
 #endif //PL_TALKER_H

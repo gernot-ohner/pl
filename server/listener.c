@@ -3,6 +3,7 @@
 */
 
 #include "listener.h"
+#include "../util/util.h"
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -17,7 +18,7 @@ void *get_in_addr(struct sockaddr *sa)
 int main(void)
 {
     int sockfd;
-    struct addrinfo hints, *servinfo, *p;
+    struct addrinfo *servinfo, *p;
     int rv;
     int numbytes;
     struct sockaddr_storage their_addr;
@@ -25,10 +26,7 @@ int main(void)
     socklen_t addr_len;
     char s[INET6_ADDRSTRLEN];
 
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET6; // set to AF_INET to use IPv4
-    hints.ai_socktype = SOCK_DGRAM;
-    hints.ai_flags = AI_PASSIVE; // use my IP
+    struct addrinfo hints = get_hints(AF_INET6, SOCK_DGRAM, AI_PASSIVE);
 
     if ((rv = getaddrinfo(NULL, MYPORT, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));

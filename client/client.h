@@ -21,5 +21,7 @@
 
 #define MAXDATASIZE 100 // max number of bytes we can get at once
 
+int Recv(int sockfd, char* buf);
+
 
 #endif //PL_CLIENT_H

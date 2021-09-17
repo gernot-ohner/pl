@@ -3,11 +3,12 @@
 */
 
 #include "talker.h"
+#include "../util/util.h"
 
 int main(int argc, char *argv[])
 {
     int sockfd;
-    struct addrinfo hints, *servinfo, *p;
+    struct addrinfo *servinfo, *p;
     int rv;
     int numbytes;
 
@@ -16,9 +17,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_INET6; // set to AF_INET to use IPv4
-    hints.ai_socktype = SOCK_DGRAM;
+    struct addrinfo hints = get_hints(AF_INET6, SOCK_DGRAM, 0);
 
     if ((rv = getaddrinfo(argv[1], SERVERPORT, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));

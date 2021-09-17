@@ -3,22 +3,14 @@
 */
 
 #include "client.h"
+#include "../util/util.h"
 
-// get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa)
-{
-    if (sa->sa_family == AF_INET) {
-        return &(((struct sockaddr_in*)sa)->sin_addr);
-    }
-
-    return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
 
 int main(int argc, char *argv[])
 {
-    int sockfd, numbytes;
+    int sockfd;
     char buf[MAXDATASIZE];
-    struct addrinfo hints, *servinfo, *p;
+    struct addrinfo *servinfo, *p;
     int rv;
     char s[INET6_ADDRSTRLEN];
 
@@ -27,9 +19,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    memset(&hints, 0, sizeof hints);
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
+    struct addrinfo hints = get_hints(AF_UNSPEC, SOCK_STREAM, 0);
 
     if ((rv = getaddrinfo(argv[1], PORT, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
@@ -64,10 +54,7 @@ int main(int argc, char *argv[])
 
     freeaddrinfo(servinfo); // all done with this structure
 
-    if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-        perror("recv");
-        exit(1);
-    }
+    int numbytes = Recv(sockfd, buf);
 
     buf[numbytes] = '\0';
 
@@ -76,4 +63,13 @@ int main(int argc, char *argv[])
     close(sockfd);
 
     return 0;
+}
+
+int Recv(int sockfd, char* buf) {
+    int numbytes;
+    if ((numbytes = recv(sockfd, buf, MAXDATASIZE - 1, 0)) == -1) {
+        perror("recv");
+        exit(1);
+    }
+    return numbytes;
 }
