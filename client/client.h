@@ -19,11 +19,11 @@
 
 #define PORT "3490" // the port client will be connecting to
 
-#define MAXDATASIZE 100 // max number of bytes we can get at once
+#define MAX_DATA_SIZE 100 // max number of bytes we can get at once
 
-int Recv(int sockfd, char* buf);
+ssize_t Recv(int sockfd, char* buf);
 
-int tcp_send(char serverName[], int port, char message[]);
+int tcp_send(char serverName[], const char* port, char message[]);
 
 
 #endif //PL_CLIENT_H

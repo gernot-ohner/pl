@@ -6,17 +6,17 @@
 #include "../util/util.h"
 
 
-int tcp_send(char serverName[], int port, char message[])
+int tcp_send(char serverName[], const char* port, char message[])
 {
     //region setup
     int sockfd;
-    char buf[MAXDATASIZE];
+    char buf[MAX_DATA_SIZE];
     struct addrinfo *servinfo, *p;
     char s[INET6_ADDRSTRLEN];
 
     struct addrinfo hints = get_hints(AF_UNSPEC, SOCK_STREAM, 0);
 
-    if (Getaddrinfo(serverName, PORT, &hints, &servinfo) != 0) return 1;
+    if (Getaddrinfo(serverName, port, &hints, &servinfo) != 0) return 1;
     //endregion
 
     //region Establish Connection
@@ -50,10 +50,11 @@ int tcp_send(char serverName[], int port, char message[])
     char* setUpBuf = message;
     ssize_t bytes_sent = send(sockfd, setUpBuf, strlen(setUpBuf), 0);
     printf("sent %zd bytes\n", bytes_sent);
+    //endregion
 
     //region Receive
-    int numbytes = Recv(sockfd, buf);
-    buf[numbytes] = '\0';
+    ssize_t num_bytes = Recv(sockfd, buf);
+    buf[num_bytes] = '\0';
     printf("client: received '%s'\n",buf);
     //endregion
 
@@ -63,11 +64,11 @@ int tcp_send(char serverName[], int port, char message[])
     //endregion
 }
 
-int Recv(int sockfd, char* buf) {
-    int numbytes;
-    if ((numbytes = recv(sockfd, buf, MAXDATASIZE - 1, 0)) == -1) {
+ssize_t Recv(int sockfd, char* buf) {
+    ssize_t num_bytes;
+    if ((num_bytes = recv(sockfd, buf, MAX_DATA_SIZE - 1, 0)) == -1) {
         perror("recv");
         exit(1);
     }
-    return numbytes;
+    return num_bytes;
 }

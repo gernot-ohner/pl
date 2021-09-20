@@ -10,7 +10,7 @@ int udp_send(int argc, char *argv[])
     int sockfd;
     struct addrinfo *servinfo, *p;
     int rv;
-    int numbytes;
+    int num_bytes;
 
     if (argc != 3) {
         fprintf(stderr,"usage: talker hostname message\n");
@@ -37,7 +37,7 @@ int udp_send(int argc, char *argv[])
         return 2;
     }
 
-    if ((numbytes = sendto(sockfd, argv[2], strlen(argv[2]), 0,
+    if ((num_bytes = sendto(sockfd, argv[2], strlen(argv[2]), 0,
                            p->ai_addr, p->ai_addrlen)) == -1) {
         perror("talker: sendto");
         exit(1);
@@ -45,7 +45,7 @@ int udp_send(int argc, char *argv[])
 
     freeaddrinfo(servinfo);
 
-    printf("talker: sent %d bytes to %s\n", numbytes, argv[1]);
+    printf("talker: sent %d bytes to %s\n", num_bytes, argv[1]);
     close(sockfd);
 
     return 0;

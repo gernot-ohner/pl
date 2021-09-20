@@ -16,11 +16,11 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#define MYPORT "4950"	// the port users will be connecting to
+#define MY_PORT "4950"	// the port users will be connecting to
 
-#define MAXBUFLEN 100
+#define MAX_BUF_LEN 100
 
-int Recvfrom(int fd, void* buf, size_t len, int flags, struct sockaddr* server, socklen_t* server_addlen);
+int Recvfrom(int fd, void* buf, size_t len, int flags, struct sockaddr* server, socklen_t* server_addr_len);
 int Bind(int fd, const struct sockaddr* addr, socklen_t len);
 int Socket(int domain, int type, int protocol);
 

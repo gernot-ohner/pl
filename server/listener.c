@@ -41,15 +41,15 @@ int main(void)
     printf("listener: waiting to recvfrom...\n");
 
     addr_len = sizeof their_addr;
-    int numbytes = Recvfrom(sockfd, buf, MAXBUFLEN-1 , 0,
+    int num_bytes = Recvfrom(sockfd, buf, MAXBUFLEN-1 , 0,
              (struct sockaddr *)&their_addr, &addr_len);
 
     printf("listener: got packet from %s\n",
            inet_ntop(their_addr.ss_family,
                      get_in_addr((struct sockaddr *)&their_addr),
                      s, sizeof s));
-    printf("listener: packet is %d bytes long\n", numbytes);
-    buf[numbytes] = '\0';
+    printf("listener: packet is %d bytes long\n", num_bytes);
+    buf[num_bytes] = '\0';
     printf("listener: packet contains \"%s\"\n", buf);
 
     close(sockfd);
@@ -57,13 +57,13 @@ int main(void)
     return 0;
 }
 
-int Recvfrom(int fd, void* buf, size_t len, int flags, struct sockaddr* server, socklen_t* server_addlen) {
-    int numbytes;
-    if ((numbytes = recvfrom(fd, buf, len , flags, server, server_addlen)) == -1) {
+int Recvfrom(int fd, void* buf, size_t len, int flags, struct sockaddr* server, socklen_t* server_addr_len) {
+    int num_bytes;
+    if ((num_bytes = recvfrom(fd, buf, len , flags, server, server_addr_len)) == -1) {
         perror("recvfrom");
         exit(1);
     }
-    return numbytes;
+    return num_bytes;
 }
 
 int Bind(int fd, const struct sockaddr* addr, socklen_t len) {
@@ -81,5 +81,5 @@ int Socket(int domain, int type, int protocol) {
         perror("listener: socket");
         return -1;
     }
-    return 0;
+    return sockfd;
 }
