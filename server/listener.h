@@ -20,4 +20,8 @@
 
 #define MAXBUFLEN 100
 
+int Recvfrom(int fd, void* buf, size_t len, int flags, struct sockaddr* server, socklen_t* server_addlen);
+int Bind(int fd, const struct sockaddr* addr, socklen_t len);
+int Socket(int domain, int type, int protocol);
+
 #endif //PL_LISTENER_H
