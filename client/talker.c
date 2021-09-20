@@ -5,7 +5,7 @@
 #include "talker.h"
 #include "../util/util.h"
 
-int main(int argc, char *argv[])
+int udp_send(int argc, char *argv[])
 {
     int sockfd;
     struct addrinfo *servinfo, *p;

@@ -1,12 +1,9 @@
-/*
-** server.c -- a stream socket server demo
-*/
-
 #include "server.h"
 
 
-int main(void)
+int tcp_server(void)
 {
+    //region setup
     int sockfd, new_fd;  // listen on sock_fd, new connection on new_fd
     struct addrinfo *servinfo, *p;
     struct sockaddr_storage their_addr; // connector's address information
@@ -16,7 +13,10 @@ int main(void)
     char s[INET6_ADDRSTRLEN];
 
     struct addrinfo hints = get_hints(AF_UNSPEC, SOCK_STREAM, AI_PASSIVE);
+    //endregion
 
+    //region Establish Connection
+    // I don't need the server argument here?
     if (Getaddrinfo(NULL, PORT, &hints, &servinfo) != 0) return 1;
 
     // loop through all the results and bind to the first we can
@@ -53,7 +53,9 @@ int main(void)
         perror("listen");
         exit(1);
     }
+//    endregion
 
+    //region signal handling
     sa.sa_handler = sigchld_handler; // reap all dead processes
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = SA_RESTART;
@@ -61,10 +63,11 @@ int main(void)
         perror("sigaction");
         exit(1);
     }
+    //endregion
 
     printf("server: waiting for connections...\n");
 
-    while(1) {  // main accept() loop
+    while(1) {  // tcp_receive accept() loop
         sin_size = sizeof their_addr;
         new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
         if (new_fd == -1) {
@@ -75,17 +78,28 @@ int main(void)
         inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
         printf("server: got connection from %s\n", s);
 
-        if (!fork()) { // this is the child process
+        pid_t child_pid = fork();
+        char receivedBuf[100];
+        if (!child_pid) { // this is the child process
             close(sockfd); // child doesn't need the listener
-            if (send(new_fd, "Hello, world!", 13, 0) == -1)
-                perror("send");
+
+            const ssize_t bytes_received = recv(new_fd, receivedBuf, 100, 0); // NOLINT(cppcoreguidelines-narrowing-conversions)
+            printf("received %zd bytes of data: %s\n", bytes_received, receivedBuf);
+
+            const ssize_t bytes_sent = send(new_fd, receivedBuf, strlen(receivedBuf), 0);
+            if (bytes_sent == -1) perror("send");
+            else printf("sent %zd bytes of data: %s\n", bytes_sent, receivedBuf);
+            //
             close(new_fd);
             exit(0);
         }
         close(new_fd);  // parent doesn't need this
     }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "UnreachableCode"
     return 0;
+#pragma clang diagnostic pop
 }
 
 

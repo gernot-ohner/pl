@@ -23,5 +23,7 @@
 
 int Recv(int sockfd, char* buf);
 
+int tcp_send(char serverName[], int port, char message[]);
+
 
 #endif //PL_CLIENT_H

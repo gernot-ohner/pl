@@ -25,5 +25,6 @@
 #define BACKLOG 10	 // how many pending connections queue will hold
 
 static void sigchld_handler(int s);
+int tcp_server(void);
 
 #endif //PL_SERVER_H
