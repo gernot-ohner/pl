@@ -5,7 +5,6 @@ set(CMAKE_C_STANDARD 11)
 
 add_executable(client_main
         client/client_main.c
-        client/client_main.h
         client/client.c
         client/client.h
         util/util.c
@@ -13,8 +12,19 @@ add_executable(client_main
 
 add_executable(server_main
         server/server_main.c
-        server/server_main.h
         server/server.c
         server/server.h
         util/util.c
         util/util.h)
+
+add_executable(udp_counter
+        server/udp_counter.c
+        server/udp_counter.h
+        util/util.c
+        util/util.h)
+
+add_executable(udp_talker
+        client/talker.c
+        client/talker.h
+        util/util.c
+        util/util.c)
