@@ -28,3 +28,10 @@ add_executable(udp_talker
         client/talker.h
         util/util.c
         util/util.c)
+
+add_executable(guide
+        guide/signal.c
+        guide/pipes.c)
+
+add_executable(speak guide/speak.c)
+add_executable(tick guide/tick.c)

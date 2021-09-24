@@ -2,7 +2,7 @@
 // Created by go on 19.09.21.
 //
 
-#include "server_main.h"
+#include "server.h"
 
 
 int main(void) {

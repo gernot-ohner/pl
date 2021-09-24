@@ -83,7 +83,7 @@ int tcp_server(void)
         if (!child_pid) { // this is the child process
             close(sockfd); // child doesn't need the listener
 
-            const ssize_t bytes_received = recv(new_fd, receivedBuf, 100, 0); // NOLINT(cppcoreguidelines-narrowing-conversions)
+            const ssize_t bytes_received = recv(new_fd, receivedBuf, 100, 0);
             printf("received %zd bytes of data: %s\n", bytes_received, receivedBuf);
 
             const ssize_t bytes_sent = send(new_fd, receivedBuf, strlen(receivedBuf), 0);
@@ -91,6 +91,7 @@ int tcp_server(void)
             else printf("sent %zd bytes of data: %s\n", bytes_sent, receivedBuf);
             //
             close(new_fd);
+
             exit(0);
         }
         close(new_fd);  // parent doesn't need this
