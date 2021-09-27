@@ -3,11 +3,13 @@
 //
 
 #include "client.h"
+#include "talker.h"
 
 
 int main(int argc, char* argv[]) {
 
     char* num_packets;
+    int bytes_sent;
     if (argc > 2) printf("Usage: pl [optional: number_packets]");
 
 
@@ -20,17 +22,36 @@ int main(int argc, char* argv[]) {
     // Step 1, establish a tcp connection with the server
     // transmit the information about how many packets I will send
     // one I've gotten acknowledge
-    tcp_send("localhost", PORT, num_packets);
+    // NOT A GOOD ABSTRACTION: should be more like "establish connection" & send on established connection
+    int fd = tcp_open(SERVER_NAME, PORT);
+    printf("client [PID: %d]: sending initial TCP packet to fd %d\n", getpid(), fd);
+    bytes_sent = tcp_send(fd, "100");
+    if (bytes_sent == -1) exit(1);
+    printf("client [PID: %d]: sent initial TCP packet to fd %d\n", getpid(), fd);
 
 
     // Step 2:
     // send $num_packets udp packets to server
 
+    sleep(2);
+    printf("client [PID: %d]: sending UDP packets\n", getpid());
+    udp_send(10);
+    printf("client [PID: %d]: sent UDP packets\n", getpid());
+
+    sleep(2);
     // Step 3:
     // wait for server to tell me how many udp packets he received
+    printf("client [PID: %d]: sending \"interrupt\" TCP packet to fd %d\n", getpid(), fd);
+    bytes_sent = tcp_send(fd, "interrupt");
+    if (bytes_sent == -1) exit(1);
+    printf("client [PID: %d]: sent \"interrupt\" TCP packet to fd %d\n", getpid(), fd);
 
     // Step 4:
     // wait for server to tell me that he will send udp packets now
+    char response[100];
+    tcp_receive(fd, response);
+    printf("client [PID %d]: got response: \"%s\"\n", getpid(), response);
+
 
     // Step 5:
     // count how many udp packets I received

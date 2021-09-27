@@ -6,7 +6,7 @@
 #include "../util/util.h"
 
 
-int tcp_send(char serverName[], const char* port, char message[])
+int tcp_open(char serverName[], const char* port)
 {
     //region setup
     int sockfd;
@@ -37,34 +37,23 @@ int tcp_send(char serverName[], const char* port, char message[])
         break;
     }
     if (p == NULL) {
-        fprintf(stderr, "client: failed to connect\n");
-        return 2;
+        fprintf(stderr, "client [PID: %d]: failed to connect\n", getpid());
+        exit(1);
     }
+
     inet_ntop(p->ai_family, get_in_addr((struct sockaddr *)p->ai_addr),
               s, sizeof s);
-    printf("client: connecting to %s\n", s);
+    printf("client [PID: %d]: connecting to %s\n", getpid(), s);
     freeaddrinfo(servinfo); // all done with this structure
     //endregion
 
-    //region Send
-    char* setUpBuf = message;
-    ssize_t bytes_sent = send(sockfd, setUpBuf, strlen(setUpBuf), 0);
-    printf("sent %zd bytes\n", bytes_sent);
-    //endregion
 
-    //region Receive
-    ssize_t num_bytes = Recv(sockfd, buf);
-    buf[num_bytes] = '\0';
-    printf("client: received '%s'\n",buf);
-    //endregion
 
-    //region finally
-    close(sockfd);
-    return 0;
-    //endregion
+    return sockfd;
 }
 
 ssize_t Recv(int sockfd, char* buf) {
+    printf("client [PID: %d]: trying to receive on fd %d", getpid(), sockfd);
     ssize_t num_bytes;
     if ((num_bytes = recv(sockfd, buf, MAX_DATA_SIZE - 1, 0)) == -1) {
         perror("recv");
@@ -72,3 +61,33 @@ ssize_t Recv(int sockfd, char* buf) {
     }
     return num_bytes;
 }
+
+ssize_t tcp_send(int fd, char* msg) {
+
+    //region Send
+    char* setUpBuf = msg;
+    ssize_t bytes_sent = send(fd, setUpBuf, strlen(setUpBuf), 0);
+    if (bytes_sent == -1) {
+        perror("mysend");
+        return -1;
+    }
+    printf("client [PID: %d]: sent %zd bytes\n", getpid(), bytes_sent);
+    //endregion
+
+    return bytes_sent;
+}
+
+ssize_t tcp_receive(int fd, OUT char* msg) {
+
+    //region Send
+    ssize_t bytes_received = recv(fd, msg, 100, 0);
+    if (bytes_received == -1) {
+        perror("myreceive");
+        return -1;
+    }
+    printf("client [PID: %d]: received %zd bytes\n", getpid(), bytes_received);
+    //endregion
+
+    return bytes_received;
+}
+

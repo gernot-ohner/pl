@@ -18,16 +18,17 @@
 
 #define MY_PORT "4950"	// the port users will be connecting to
 #define FIFO_NAME "ipc"
+#define OUT
 
 #define MAX_BUF_LEN 100
 
-int Recvfrom(int fd, void* buf, size_t len, int flags, struct sockaddr* server, socklen_t* server_addr_len);
-int Bind(int fd, const struct sockaddr* addr, socklen_t len);
-int Socket(int domain, int type, int protocol);
+int udp_listen();
+
+static int Bind(int fd, const struct sockaddr* addr, socklen_t len);
 
 
-ssize_t transfer_to_other_process(int packet_count);
+static ssize_t transfer_to_other_process(int packet_count);
 
-int sig_usr1_handler(int sig);
+static void sig_usr1_handler(__attribute__((unused)) int sig);
 
 #endif //PL_UDP_COUNTER_H

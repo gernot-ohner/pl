@@ -26,5 +26,6 @@
 
 static void sigchld_handler(int s);
 int tcp_server(void);
+int readFromOtherProcess();
 
 #endif //PL_SERVER_H

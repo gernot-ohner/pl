@@ -6,11 +6,10 @@
 
 volatile sig_atomic_t keep_listening = true;
 
-int main(void)
-{
+int udp_listen() {
     // region declarations
     int sockfd;
-    struct addrinfo *servinfo, *p;
+    struct addrinfo* servinfo, * p;
     int rv;
     struct sockaddr_storage their_addr;
     char buf[MAX_BUF_LEN];
@@ -18,13 +17,13 @@ int main(void)
     char s[INET6_ADDRSTRLEN];
     // endregion
 
-    struct addrinfo hints = get_hints(AF_INET6, SOCK_DGRAM, AI_PASSIVE);
+    struct addrinfo hints = get_hints(AF_INET, SOCK_DGRAM, AI_PASSIVE);
 
-    if (Getaddrinfo(NULL, MY_PORT, &hints, &servinfo) != 0) return 1;
+    if (Getaddrinfo(NULL, MY_PORT, &hints, &servinfo) != 0) return -1;
 
     // region bind to address
     // loop through all the results and bind to the first we can
-    for(p = servinfo; p != NULL; p = p->ai_next) {
+    for (p = servinfo; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             perror("listener: socket");
             continue;
@@ -33,8 +32,8 @@ int main(void)
         break;
     }
     if (p == NULL) {
-        fprintf(stderr, "listener: failed to bind socket\n");
-        return 2;
+        fprintf(stderr, "listener [PID: %d]: failed to bind socket\n", getpid());
+        return -1;
     }
     freeaddrinfo(servinfo);
     // endregion
@@ -47,24 +46,27 @@ int main(void)
     sigaction(SIGUSR1, &sa, NULL);
     // endregion
 
-    printf("listener: waiting to recvfrom...\n");
+    printf("listener [PID: %d]: waiting to recvfrom...\n", getpid());
     int packet_count = 0;
     fcntl(sockfd, F_SETFL, O_NONBLOCK);
-    // TO replace this for loop with testing a flag that the other process can set
-    // maybe make a `volatile sig_atomic_t continue_listening?` and set that to false in a signal handler for SIGUSR1
-    while (keep_listening){
+    while (keep_listening) {
+        // TODO this is pretty bad design.
+        //   if the client dies or is cancelled after it told the server to listen
+        //   but before it told the server to stop, the server is going to loop forever
+        //   SO: I need to add a fallback mechanism to stop the loop
+
         addr_len = sizeof their_addr;
+        printf("listener [PID %d]: trying to read from fd %d\n", getpid(), sockfd);
         ssize_t num_bytes = recvfrom(sockfd, buf, MAX_BUF_LEN - 1, 0,
-                                 (struct sockaddr*) &their_addr, &addr_len);
+                                     OUT (struct sockaddr*) &their_addr, &addr_len);
 
         if (num_bytes != -1) {
-            printf("listener: got packet from %s\n",
-                   inet_ntop(their_addr.ss_family,
-                             get_in_addr((struct sockaddr*) &their_addr),
-                             s, sizeof s));
-            printf("listener: packet is %zd bytes long\n", num_bytes);
             buf[num_bytes] = '\0';
-            printf("listener: packet contains \"%s\"\n", buf);
+            printf("listener [PID %d]: got packet from %s, contains: %s (%zd) bytes\n",
+                   getpid(),
+                   inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr*) &their_addr), s, sizeof s),
+                   buf,
+                   num_bytes);
             packet_count++;
         } else {
             printf("listener [PID: %d]: no packet at the moment\n", getpid());
@@ -72,10 +74,9 @@ int main(void)
         }
     }
 
-    printf("listener: counted %d packets\n", packet_count);
-
-    printf("listener: sending packets to pipe\n");
-    transfer_to_other_process(packet_count);
+    printf("listener [PID: %d]: counted %d packets\n", getpid(), packet_count);
+    printf("listener [PID: %d]: sending packets to pipe\n", getpid());
+    if (transfer_to_other_process(packet_count) == -1) return -1;
 
     close(sockfd);
     return 0;
@@ -90,18 +91,8 @@ ssize_t transfer_to_other_process(int packet_count) {
     return write_result;
 }
 
-int sig_usr1_handler(int sig) {
+void sig_usr1_handler(__attribute__((unused)) int sig) {
     keep_listening = false;
-    return 0;
-}
-
-int Recvfrom(int fd, void* buf, size_t len, int flags, struct sockaddr* server, socklen_t* server_addr_len) {
-    int num_bytes;
-    if ((num_bytes = recvfrom(fd, buf, len , flags, server, server_addr_len)) == -1) {
-        perror("recvfrom");
-        exit(1);
-    }
-    return num_bytes;
 }
 
 int Bind(int fd, const struct sockaddr* addr, socklen_t len) {
@@ -111,13 +102,4 @@ int Bind(int fd, const struct sockaddr* addr, socklen_t len) {
         return -1;
     }
     return 0;
-}
-
-int Socket(int domain, int type, int protocol) {
-    int sockfd;
-    if ((sockfd = socket(domain, type, protocol)) == -1) {
-        perror("listener: socket");
-        return -1;
-    }
-    return sockfd;
 }

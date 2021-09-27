@@ -1,5 +1,7 @@
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "server.h"
-
+#include "udp_counter.h"
 
 int tcp_server(void)
 {
@@ -45,7 +47,7 @@ int tcp_server(void)
     freeaddrinfo(servinfo); // all done with this structure
 
     if (p == NULL)  {
-        fprintf(stderr, "server: failed to bind\n");
+        fprintf(stderr, "server [PID %d]: failed to bind\n", getpid());
         exit(1);
     }
 
@@ -65,7 +67,7 @@ int tcp_server(void)
     }
     //endregion
 
-    printf("server: waiting for connections...\n");
+    printf("server [PID: %d]: waiting for connections...\n", getpid());
 
     while(1) {  // tcp_receive accept() loop
         sin_size = sizeof their_addr;
@@ -76,24 +78,67 @@ int tcp_server(void)
         }
 
         inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), s, sizeof s);
-        printf("server: got connection from %s\n", s);
+        printf("server [PID: %d]: got connection from %s\n", getpid(), s);
 
         pid_t child_pid = fork();
-        char receivedBuf[100];
+
+        char udpMsg[100];
+        char interruptUdp[10]; // TODO ask dave about "may point to memory out of scope"
+        char receivedBuf[100]; //  if I move this inside the loop
+
         if (!child_pid) { // this is the child process
             close(sockfd); // child doesn't need the listener
 
+            printf("server [PID %d]: trying to receive from fd %d\n", getpid(), new_fd);
             const ssize_t bytes_received = recv(new_fd, receivedBuf, 100, 0);
-            printf("received %zd bytes of data: %s\n", bytes_received, receivedBuf);
+            printf("server [PID: %d]: received %zd bytes of data: %s\n", getpid(), bytes_received, receivedBuf);
 
-            const ssize_t bytes_sent = send(new_fd, receivedBuf, strlen(receivedBuf), 0);
-            if (bytes_sent == -1) perror("send");
-            else printf("sent %zd bytes of data: %s\n", bytes_sent, receivedBuf);
-            //
-            close(new_fd);
+            pid_t udp_pid = fork();
+            printf("server [PID: %d]: forked off process %d\n", getpid(), udp_pid);
+            if (udp_pid == 0) { // this is the child
+                udp_listen("localhost", 10, udp_pid);
+                exit(0);
+                // TODO I still need to harvest these orphan children somehow!
 
-            exit(0);
+//                const ssize_t bytes_sent_about_udp = send(new_fd, udpMsg, strlen(udpMsg), 0);
+//                if (bytes_sent_about_udp == -1) perror("udp send");
+//                else printf("server [PID: %d]: sent %ld bytes of data: %s\n", getpid(), bytes_sent_about_udp, udpMsg);
+            } else {
+                printf("server [PID: %d]: waiting for signal to interrupt %d now\n", getpid(), udp_pid);
+                recv(new_fd, interruptUdp, 100, 0);
+                if (!strcmp(interruptUdp, "interrupt")) {
+                    printf("server [PID: %d]: killing process %d\n", getpid(), udp_pid);
+                    int kill_result = kill(udp_pid, SIGUSR1);
+                    int packets_counted = readFromOtherProcess();
+
+                    snprintf(udpMsg, 100, "server: udp listener reported %d packets counted", packets_counted);
+                    printf("server [PID: %d]: udp listener reported %d packets counted\n", getpid(), packets_counted);
+
+                    if (kill_result != -1) {
+                        printf("server [PID: %d]: successfully sent the signal!\n", getpid());
+                    } else {
+                        printf("server [PID: %d]: failed to send the signal!\n", getpid());
+                    }
+                } else {
+                    snprintf(udpMsg, 100, "server: could not count packets\n");
+                    printf("server [PID %d]: received packet with unexpected content: %s", getpid(), interruptUdp);
+                }
+
+                // report the number of received packets back to the client
+                ssize_t send_successful = send(new_fd, udpMsg, 100, 0);
+                if (send_successful != -1) {
+                    close(new_fd);
+                    exit(0);
+                } else {
+                    close(new_fd);
+                    perror("send udp count");
+                    exit(1);
+                }
+            }
         }
+
+
+
         close(new_fd);  // parent doesn't need this
     }
 
@@ -101,6 +146,24 @@ int tcp_server(void)
 #pragma ide diagnostic ignored "UnreachableCode"
     return 0;
 #pragma clang diagnostic pop
+}
+
+int readFromOtherProcess() {
+    char buf[MAX_BUF_LEN];
+
+    mknod(FIFO_NAME, S_IFIFO | 0666, 0);
+    int fd = open(FIFO_NAME, O_RDONLY);
+
+    if (read(fd, buf, MAX_BUF_LEN) == - 1) {
+        perror("pipe read");
+        exit(1);
+    }
+
+//    int packets_counted = atoi(buf);
+    // todo check if that works
+    int packets_counted = (int) strtol(buf, NULL, 10);
+
+    return packets_counted;
 }
 
 

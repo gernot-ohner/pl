@@ -7,6 +7,8 @@ add_executable(client_main
         client/client_main.c
         client/client.c
         client/client.h
+        client/talker.c
+        client/talker.h
         util/util.c
         util/util.h)
 
@@ -14,6 +16,8 @@ add_executable(server_main
         server/server_main.c
         server/server.c
         server/server.h
+        server/udp_counter.c
+        server/udp_counter.h
         util/util.c
         util/util.h)
 
