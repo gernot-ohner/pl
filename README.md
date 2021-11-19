@@ -1,8 +1,6 @@
-
-### Design
+# `pl` is a very simple packet loss manager
 
 There is a server and a client
-
 - The server will be listening for [[tcp]] connections.
 - The client will connect to the server via tcp and tell it:
     - I'm going to send you 100 [[UDP]] packets over the next 5 seconds.
