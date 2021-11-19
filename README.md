@@ -12,3 +12,8 @@ There is a server and a client
 - Then the client will count how many UDP packets arrived from the server
   and present the information:
   loss on the way there, loss on the way back, total loss
+
+## Rationale
+I built this project to familiarize myself with
+1. Linux syscalls, particularly: UDP and TCP sockets and interprocess communication
+2. fork-join parallelism
