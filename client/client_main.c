@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
 
     sleep(2);
     printf("client [PID: %d]: sending UDP packets\n", getpid());
-    udp_send(10);
+    udp_send(100);
     printf("client [PID: %d]: sent UDP packets\n", getpid());
 
     sleep(2);

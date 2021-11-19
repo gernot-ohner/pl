@@ -1,7 +1,4 @@
-/*
-** talker.c -- a datagram "client" demo
-*/
-
+#include <time.h>
 #include "talker.h"
 #include "../util/util.h"
 
@@ -32,14 +29,26 @@ int udp_send(int num_packets) {
         return 2;
     }
 
-    // TODO what do I do about the message?
+    struct timespec packet_spacing_time;
+    packet_spacing_time.tv_sec = 0;
+    packet_spacing_time.tv_nsec = 5000000000 / num_packets;
+    struct timespec remaining_time;
+
+    int packet_sent_counter = 0;
+    printf("client [PID %d]: sent packets:\n", getpid());
     for (int i = 0; i < num_packets; i++) {
         if ((num_bytes = sendto(sockfd, "hi", 2, 0,
                                 p->ai_addr, p->ai_addrlen)) == -1) {
             perror("talker: sendto");
             exit(1);
         }
+        packet_sent_counter++;
+        printf("*");
+        fflush(stdout);
+        nanosleep(&packet_spacing_time, &remaining_time);
     }
+    printf("\n");
+    printf("client [PID %d]: sent %d packets\n", getpid(), packet_sent_counter);
 
     freeaddrinfo(servinfo);
 
